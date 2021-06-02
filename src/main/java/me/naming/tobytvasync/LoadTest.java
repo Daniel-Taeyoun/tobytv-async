@@ -5,10 +5,11 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import lombok.extern.log4j.Log4j2;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StopWatch;
 import org.springframework.web.client.RestTemplate;
 
-@Log4j2
+@Slf4j
 public class LoadTest {
 
   static AtomicInteger counter = new AtomicInteger(0);
@@ -17,7 +18,7 @@ public class LoadTest {
     ExecutorService es = Executors.newFixedThreadPool(100);
 
     RestTemplate rt = new RestTemplate();
-    String url = "http://localhost:8080/async";
+    String url = "http://localhost:8080/dr";
     StopWatch main = new StopWatch();
     main.start();
 
