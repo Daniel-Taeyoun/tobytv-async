@@ -1,10 +1,11 @@
 package me.naming.tobytvasync;
 
+import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import lombok.extern.log4j.Log4j2;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StopWatch;
 import org.springframework.web.client.RestTemplate;
@@ -14,28 +15,37 @@ public class LoadTest {
 
   static AtomicInteger counter = new AtomicInteger(0);
 
-  public static void main(String[] args) throws InterruptedException {
+  public static void main(String[] args) throws InterruptedException, BrokenBarrierException {
     ExecutorService es = Executors.newFixedThreadPool(100);
 
     RestTemplate rt = new RestTemplate();
-    String url = "http://localhost:8080/dr";
-    StopWatch main = new StopWatch();
-    main.start();
+    String url = "http://localhost:8080/rest?idx={idx}";
+
+    CyclicBarrier barrier = new CyclicBarrier(101);
 
     for(int i=0; i<100; i++) {
-      es.execute(() -> {
+      es.submit(() -> {
         int idx = counter.addAndGet(1);
-        log.info("** Lambda Thread {}" + idx);
+
+        //CyclicBarrier 클래스를 통해 100개 쓰레드가 올때까지 대기했다가 동시에 실행합니다.
+        barrier.await();
+
+        log.info("** Lambda Thread {}", idx);
 
         StopWatch sw = new StopWatch();
         sw.start();
 
-        rt.getForObject(url, String.class);
+        String res = rt.getForObject(url, String.class, idx);
 
         sw.stop();
-        log.info("** Finish: {} -> {}", idx, sw.getTotalTimeSeconds());
+        log.info("** Finish: {} / {} / {}", idx, sw.getTotalTimeSeconds(), res);
+        return null;
       });
     }
+
+    barrier.await();
+    StopWatch main = new StopWatch();
+    main.start();
 
     es.shutdown();
     es.awaitTermination(100, TimeUnit.SECONDS);
