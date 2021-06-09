@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.AsyncRestTemplate;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.context.request.async.DeferredResult;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
@@ -60,6 +61,50 @@ public class TobyTvAsyncApplication3 {
 //          ,"hello +"+idx);
 
       return rt.getForEntity("http://localhost:8081/service?req={req}" , String.class ,"hello +"+idx);
+    }
+
+    /**
+     *
+     *
+     */
+    @GetMapping("/rest/deferred")
+    public DeferredResult<String> deferredResult(int idx) {
+      DeferredResult<String> dr = new DeferredResult<>();
+
+      ListenableFuture<ResponseEntity<String>> f1 = rt.getForEntity("http://localhost:8081/service?req={req}", String.class, "hello "+idx);
+
+      f1.addCallback(s -> {
+        dr.setResult(s.getBody() + "/work");
+      }, e->{
+        /** 비동기 상황에서 MessageException을 무분별하게 Throw하면 정확하게 스프링 Mvc 지시한 곳에서 정확하게 받을 것이라는 보장이 없다.
+         * 따라서 DeferredResult에 해당 에러 메세지를 저장해서 리턴
+         */
+        dr.setErrorResult(e.getMessage());
+      });
+      return dr;
+    }
+
+    @GetMapping("/rest/callback")
+    public DeferredResult<String> callbackResult(int idx) {
+      DeferredResult<String> dr = new DeferredResult<>();
+
+      ListenableFuture<ResponseEntity<String>> f1 = rt.getForEntity("http://localhost:8081/service?req={req}", String.class, "hello " + idx);
+      /**
+       * 주의사항!!!
+       * - DeferredResult 사용 시 아래 (a) 메세지와 같은 현상이 발생 할 수 있다.
+       */
+      f1.addCallback(s -> {
+            ListenableFuture<ResponseEntity<String>> f2 = rt.getForEntity( "http://localhost:8081/service2?req={req}", String.class, "hello " + idx);
+            f2.addCallback(s2 -> {
+              dr.setResult(s2.getBody());
+            }, e2 -> {
+              dr.setErrorResult(e2.getMessage());
+            });
+//          dr.setResult(s.getBody());  -- a. DeferredResult를 두번째 API(/service2)에서 설정하지 않고 첫번째 API(/service)에서 호출하는 경우 두번째 결과값을 대기하지 않고 바로 리턴
+          }, e -> {
+            dr.setErrorResult(e.getMessage());
+          });
+      return dr;
     }
 
   }
