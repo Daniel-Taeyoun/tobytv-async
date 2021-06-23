@@ -91,7 +91,7 @@ public class TobyTvAsyncApplication3 {
       return dr;
     }
 
-    @GetMapping("/rest/callback")
+      @GetMapping("/rest/callback")
     public DeferredResult<String> callbackResult(int idx) {
       DeferredResult<String> dr = new DeferredResult<>();
 
@@ -131,7 +131,7 @@ public class TobyTvAsyncApplication3 {
     public DeferredResult<String> callbackResultRefactoring(int idx) {
       DeferredResult<String> dr = new DeferredResult<>();
       Completion
-          .from(asyncRestTemplate.getForEntity(URL1, String.class, "hello " + idx))
+          .from(asyncRestTemplate.getForEntity(URL1, String.class, "Completion " + idx))
           .andApply(s -> asyncRestTemplate.getForEntity(URL2, String.class, s.getBody()))
           .andApply(s -> myService.work(s.getBody()))
           .andError(e -> dr.setErrorResult(e.toString()))
@@ -139,6 +139,24 @@ public class TobyTvAsyncApplication3 {
 
       return dr;
     }
+
+    @Service
+    public static class MyService {
+      @Async
+      public ListenableFuture<String> work(String req) {
+        return new AsyncResult<>(req + "/asyncwork");
+      }
+    }
+
+    @Bean
+    public ThreadPoolTaskExecutor myThreadPool() {
+      ThreadPoolTaskExecutor te = new ThreadPoolTaskExecutor();
+      te.setCorePoolSize(1);
+      te.setMaxPoolSize(1);
+      te.initialize();
+      return te;
+    }
+  }
 
     public static class AcceptCompletion<S> extends Completion<S, Void>{
       public Consumer<S> con;
@@ -182,8 +200,6 @@ public class TobyTvAsyncApplication3 {
       }
     }
 
-
-
     public static class Completion<S, T> {
       Completion next;
 
@@ -214,6 +230,7 @@ public class TobyTvAsyncApplication3 {
       }
 
       void error(Throwable e) {
+        if (next != null) next.error(e);
       }
 
       void complete(T s) {
@@ -223,24 +240,6 @@ public class TobyTvAsyncApplication3 {
       void run(S value) {
       }
     }
-
-    @Service
-    public static class MyService {
-      @Async
-      public ListenableFuture<String> work(String req) {
-        return new AsyncResult<>(req + "/asyncwork");
-      }
-    }
-
-    @Bean
-    public ThreadPoolTaskExecutor myThreadPool() {
-      ThreadPoolTaskExecutor te = new ThreadPoolTaskExecutor();
-      te.setCorePoolSize(1);
-      te.setMaxPoolSize(1);
-      te.initialize();
-      return te;
-    }
-  }
 
   public static void main(String[] args) {
     SpringApplication.run(TobyTvAsyncApplication3.class, args);
