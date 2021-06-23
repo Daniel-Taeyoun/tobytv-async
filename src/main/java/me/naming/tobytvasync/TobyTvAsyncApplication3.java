@@ -171,7 +171,7 @@ public class TobyTvAsyncApplication3 {
 
     public static class ApplyCompletion<S, T> extends Completion<S, T> {
       public Function<S, ListenableFuture<T>> fn;
-      public ApplyCompletion<Function<S, ListenableFuture<T>> fn> {
+      public ApplyCompletion(Function<S, ListenableFuture<T>> fn) {
         this.fn = fn;
       }
 
@@ -194,6 +194,7 @@ public class TobyTvAsyncApplication3 {
       public Completion<T, T> andError(Consumer<Throwable> econ){
         Completion<T, T> c = new ErrorCompletion<>(econ);
         this.next = c;
+        return c;
       }
 
       public <V> Completion<T,V> andApply(Function<T, ListenableFuture<V>> fn) {
