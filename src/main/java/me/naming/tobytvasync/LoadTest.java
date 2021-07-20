@@ -19,6 +19,7 @@ public class LoadTest {
     ExecutorService es = Executors.newFixedThreadPool(100);
 
     RestTemplate rt = new RestTemplate();
+    String webClientUrl = "http://localhost:8080/webclient?idx={idx}";
     String url = "http://localhost:8080/rest/callback/refactoring?idx={idx}";
 //    String url = "http://localhost:8080/rest/callback?idx={idx}";
 
@@ -36,7 +37,7 @@ public class LoadTest {
         StopWatch sw = new StopWatch();
         sw.start();
 
-        String res = rt.getForObject(url, String.class, idx);
+        String res = rt.getForObject(webClientUrl, String.class, idx);
 
         sw.stop();
         log.info("** Finish: {} / {} / {}", idx, sw.getTotalTimeSeconds(), res);

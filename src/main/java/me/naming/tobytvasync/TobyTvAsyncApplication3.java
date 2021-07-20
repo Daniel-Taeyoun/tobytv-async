@@ -22,6 +22,7 @@ import org.springframework.web.client.AsyncRestTemplate;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.request.async.DeferredResult;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
 /**
  * (5) 비동기 RestTemplate과 비동기 MVC의 결합
@@ -53,6 +54,7 @@ public class TobyTvAsyncApplication3 {
     AsyncRestTemplate asyncRestTemplate = new AsyncRestTemplate(new Netty4ClientHttpRequestFactory(new NioEventLoopGroup(1)));
     WebClient client = WebClient.create();
 
+    static final String WebClientURL = "http://localhost:8081/service";
     static final String URL1 = "http://localhost:8081/service?req={req}";
     static final String URL2 = "http://localhost:8081/service2?req={req}";
     final MyService myService;
@@ -69,6 +71,11 @@ public class TobyTvAsyncApplication3 {
     @GetMapping("/rest/async")
     public ListenableFuture<ResponseEntity<String>> rest(int idx) {
       return asyncRestTemplate.getForEntity(URL1, String.class, "hello +" + idx);
+    }
+
+    @GetMapping("/webclient")
+    public Mono<String> webClientCall(int idx) {
+      return WebClient.builder().baseUrl(WebClientURL).build().get().retrieve().bodyToMono(String.class);
     }
 
     @GetMapping("/rest/deferred")
@@ -91,7 +98,7 @@ public class TobyTvAsyncApplication3 {
       return dr;
     }
 
-      @GetMapping("/rest/callback")
+    @GetMapping("/rest/callback")
     public DeferredResult<String> callbackResult(int idx) {
       DeferredResult<String> dr = new DeferredResult<>();
 
@@ -123,9 +130,10 @@ public class TobyTvAsyncApplication3 {
     }
 
     /**
-     * (6) AsyncRestTemplate 콜백 헬과 중복 작업 문제
-     * @param idx
-     * @return
+     * @auth          : naming
+     * @description   : (6) AsyncRestTemplate 콜백 헬과 중복 작업 문제
+     *  - Completion 클래스를 활용해 콜백 헬과 중복 작업 문제 해결. 실제 프로젝트에서는 사용 X => CompletableFuture를 통해 해결 할 수 있음.
+     * @date          : 2021/06/24
      */
     @GetMapping("/rest/callback/refactoring")
     public DeferredResult<String> callbackResultRefactoring(int idx) {
@@ -219,6 +227,9 @@ public class TobyTvAsyncApplication3 {
         return c;
       }
 
+      /**
+       * @description : S -> 매개변수(Param), T -> 결과값(Result)을 뜻한다.
+       */
       public static <S, T> Completion<S, T> from(ListenableFuture<T> lf) {
         Completion<S, T> c = new Completion<S, T>();
         lf.addCallback(s -> {
