@@ -75,6 +75,7 @@ public class TobyTvAsyncApplication3 {
 
     @GetMapping("/webclient")
     public Mono<String> webClientCall(int idx) {
+//      return WebClient.builder().baseUrl(WebClientURL).build().get().retrieve().bodyToMono(String.class);
       return WebClient.builder().baseUrl(WebClientURL).build().get().retrieve().bodyToMono(String.class);
     }
 
