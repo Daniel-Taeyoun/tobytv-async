@@ -19,7 +19,7 @@ public class LoadTest {
     ExecutorService es = Executors.newFixedThreadPool(100);
 
     RestTemplate rt = new RestTemplate();
-    String webClientUrl = "http://localhost:8080/webclient?idx={idx}";
+    String webClientUrl = "http://localhost:8080/webClient?idx={idx}";
     String url = "http://localhost:8080/rest/callback/refactoring?idx={idx}";
 //    String url = "http://localhost:8080/rest/callback?idx={idx}";
 
