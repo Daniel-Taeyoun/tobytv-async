@@ -37,3 +37,5 @@ AsyncRestTemplate을 이야기하기 전에 우선 Http 콜할때 RestTemplate�
 **참고**  
 Servlet 관련 내용 : https://mangkyu.tistory.com/14, https://stackoverflow.com/questions/7213541/what-is-java-servlet  
 동기 비동기와 블록킹 논블록킹 개념 : https://deveric.tistory.com/99
+
+
