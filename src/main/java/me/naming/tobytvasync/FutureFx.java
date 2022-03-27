@@ -59,6 +59,7 @@ public class FutureFx {
   public static void main(String[] args) throws InterruptedException, ExecutionException {
     ExecutorService ex = Executors.newCachedThreadPool();
 
+    
     // 아래 코드와 같이 FutureTask 오브젝트 형태로 만들 수 있다.
     //    Future<String> f = ex.submit(() -> {
     //      Thread.sleep(2000);
